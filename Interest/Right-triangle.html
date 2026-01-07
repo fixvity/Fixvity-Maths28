@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Right Triangle Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --primary:#2563eb;
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Arial;
+  background:var(--bg);
+}
+.container{
+  max-width:1150px;
+  margin:auto;
+  padding:24px;
+}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:30px;
+  box-shadow:0 12px 32px rgba(0,0,0,.08);
+}
+h1{margin:0;color:var(--primary)}
+small{color:#555}
+label{
+  display:block;
+  margin-top:16px;
+  font-weight:600;
+}
+input{
+  width:100%;
+  padding:14px;
+  margin-top:6px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:16px;
+}
+button{
+  width:100%;
+  margin-top:26px;
+  padding:16px;
+  font-size:17px;
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+}
+button:hover{opacity:.93}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:26px;
+  margin-top:32px;
+}
+.result{
+  font-size:18px;
+  font-weight:700;
+}
+.formula{
+  font-size:15px;
+  color:#444;
+}
+.error{
+  color:#dc2626;
+  font-weight:600;
+  margin-top:12px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="card">
+<h1>Right Triangle Calculator</h1>
+<small>Accurate right triangle calculations · International standards</small>
+
+<label>Side a (Base)</label>
+<input type="number" id="a" placeholder="Enter side a">
+
+<label>Side b (Height)</label>
+<input type="number" id="b" placeholder="Enter side b">
+
+<label>Hypotenuse c</label>
+<input type="number" id="c" placeholder="Enter hypotenuse">
+
+<label>Angle θ (degrees)</label>
+<input type="number" id="angle" placeholder="Enter one acute angle (0–90)">
+
+<button onclick="calculate()">Calculate Triangle</button>
+<div id="error" class="error"></div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="result" id="output">Result = —</div>
+  </div>
+  <div class="card">
+    <div class="formula" id="formulaBox">
+      <b>Formulas Used</b><br><br>—
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function calculate(){
+  const A0 = parseFloat(a.value);
+  const B0 = parseFloat(b.value);
+  const C0 = parseFloat(c.value);
+  const T0 = parseFloat(angle.value);
+
+  let A=A0, B=B0, C=C0, T=T0;
+  let formulas=[];
+
+  error.innerText="";
+  output.innerHTML="Result = —";
+  formulaBox.innerHTML="<b>Formulas Used</b><br><br>—";
+
+  const filled = [A,B,C,T].filter(v=>!isNaN(v)).length;
+  if(filled < 2){
+    error.innerText="Enter exactly TWO values (one angle max).";
+    return;
+  }
+
+  if(!isNaN(T) && (T <= 0 || T >= 90)){
+    error.innerText="Angle must be between 0° and 90°.";
+    return;
+  }
+
+  if(!isNaN(A) && !isNaN(B) && !isNaN(C)){
+    error.innerText="Do not enter all three sides.";
+    return;
+  }
+
+  try{
+    if(!isNaN(A) && !isNaN(B)){
+      C=Math.sqrt(A*A+B*B);
+      formulas.push("c = √(a² + b²)");
+    }
+    else if(!isNaN(A) && !isNaN(C)){
+      if(C <= A) throw "";
+      B=Math.sqrt(C*C-A*A);
+      formulas.push("b = √(c² − a²)");
+    }
+    else if(!isNaN(B) && !isNaN(C)){
+      if(C <= B) throw "";
+      A=Math.sqrt(C*C-B*B);
+      formulas.push("a = √(c² − b²)");
+    }
+    else if(!isNaN(T) && !isNaN(A)){
+      const r=T*Math.PI/180;
+      B=A*Math.tan(r);
+      C=A/Math.cos(r);
+      formulas.push("tanθ = b/a","cosθ = a/c");
+    }
+    else if(!isNaN(T) && !isNaN(B)){
+      const r=T*Math.PI/180;
+      A=B/Math.tan(r);
+      C=B/Math.sin(r);
+      formulas.push("tanθ = b/a","sinθ = b/c");
+    }
+    else if(!isNaN(T) && !isNaN(C)){
+      const r=T*Math.PI/180;
+      A=C*Math.cos(r);
+      B=C*Math.sin(r);
+      formulas.push("cosθ = a/c","sinθ = b/c");
+    }
+
+    const theta1 = Math.atan2(B,A)*180/Math.PI;
+    const theta2 = 90-theta1;
+    const area = 0.5*A*B;
+    const perimeter = A+B+C;
+
+    output.innerHTML=`
+      a = ${A.toFixed(6)}<br>
+      b = ${B.toFixed(6)}<br>
+      c = ${C.toFixed(6)}<br><br>
+      Angle 1 = ${theta1.toFixed(6)}°<br>
+      Angle 2 = ${theta2.toFixed(6)}°<br><br>
+      Area = ${area.toFixed(6)}<br>
+      Perimeter = ${perimeter.toFixed(6)}
+    `;
+
+    formulaBox.innerHTML="<b>Formulas Used</b><br><br>"+formulas.join("<br>");
+
+  }catch{
+    error.innerText="Invalid triangle values.";
+  }
+}
+</script>
+
+</body>
+</html>
